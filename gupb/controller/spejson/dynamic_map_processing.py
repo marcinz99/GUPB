@@ -11,15 +11,15 @@ def analyze_visible_region(visible_tiles, position, terrain, facing, weapon):
         'someone_in_range': np.array([0], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
         'me_in_dmg_range': np.array([0], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
         'me_in_snipe_range': np.array([0], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
-        'visibility': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
-        'someone_here': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
-        'character_hp': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] Health points rescaled to 0-1
-        'character_weapon': np.zeros([13, 13, 5], dtype=float), # [VISIBLE] One-hot encoding of current weapon (Knife, Axe, Bow, Sword, Amulet)
-        'weapon_loc': np.zeros([13, 13, 5], dtype=float), # [VISIBLE] 1 if yes, 0 otherwise (Knife, Axe, Bow, Sword, Amulet)
-        'potion': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
-        'mist_effect': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
-        'my_dmg_range': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
-        'others_dmg_range': np.zeros([13, 13, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
+        'visibility': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
+        'someone_here': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
+        'character_hp': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] Health points rescaled to 0-1
+        'character_weapon': np.zeros([9, 9, 5], dtype=float), # [VISIBLE] One-hot encoding of current weapon (Knife, Axe, Bow, Sword, Amulet)
+        'weapon_loc': np.zeros([9, 9, 5], dtype=float), # [VISIBLE] 1 if yes, 0 otherwise (Knife, Axe, Bow, Sword, Amulet)
+        'potion': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
+        'mist_effect': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
+        'my_dmg_range': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
+        'others_dmg_range': np.zeros([9, 9, 1], dtype=float),  # [VISIBLE] 1 if yes, 0 otherwise
     }
     someone_in_range = 0
     me_in_dmg_range = 0
@@ -31,7 +31,7 @@ def analyze_visible_region(visible_tiles, position, terrain, facing, weapon):
 
     for k, v in visible_tiles.items():
         pos = (k[1] - position.y, k[0] - position.x)
-        if abs(pos[0]) <= 6 and abs(pos[1]) <= 6:
+        if abs(pos[0]) <= 4 and abs(pos[1]) <= 4:
             # Add to the short list of visible tiles
             tiles[pos] = v
         elif pos[0] == 0 or pos[1] == 0:
@@ -53,7 +53,7 @@ def analyze_visible_region(visible_tiles, position, terrain, facing, weapon):
     adversaries_pos = []
 
     for pos, tile in tiles.items():
-        idx = (pos[0] + 6, pos[1] + 6)
+        idx = (pos[0] + 4, pos[1] + 4)
         visibility['visibility'][idx] = 1
 
         if tile.character:
@@ -65,7 +65,7 @@ def analyze_visible_region(visible_tiles, position, terrain, facing, weapon):
             in_reach = weapons[weapon.name].cut_positions(
                 terrain, Coords(x=position.x + pos[1], y=position.y + pos[0]), tile.character.facing)
             in_reach = [(att_tile[1] - position.y, att_tile[0] - position.x) for att_tile in in_reach]
-            in_reach = [(p[0] + 6, p[1] + 6) for p in in_reach if abs(p[0]) <= 6 and abs(p[1]) <= 6]
+            in_reach = [(p[0] + 4, p[1] + 4) for p in in_reach if abs(p[0]) <= 4 and abs(p[1]) <= 4]
 
             if pos == (0, 0):
                 my_att_range = in_reach
@@ -74,7 +74,7 @@ def analyze_visible_region(visible_tiles, position, terrain, facing, weapon):
                     visibility['my_dmg_range'][p] = 1
             else:
                 adversaries_pos += [idx]
-                if (6, 6) in in_reach:
+                if (4, 4) in in_reach:
                     me_in_dmg_range = 1
 
                 for p in in_reach:
@@ -112,7 +112,7 @@ def get_state_summary(position, menhir_location, facing, hp, weapon, epoch, menh
         'mist_spotted': np.array([0], dtype=float),  # [STATE] 1 if yes, 0 otherwise
         'mist_close': np.array([0], dtype=float),  # [STATE] 1 if yes, 0 otherwise
         'bow_unloaded': np.array([0], dtype=float),  # [STATE] 1 if yes, 0 otherwise
-        'menhir_loc': np.zeros([13, 13, 1], dtype=float),  # [STATE] 1 if yes, 0 otherwise
+        'menhir_loc': np.zeros([9, 9, 1], dtype=float),  # [STATE] 1 if yes, 0 otherwise
     }
 
     state['facing'][0:4] = facing_onehot[facing]
@@ -125,7 +125,7 @@ def get_state_summary(position, menhir_location, facing, hp, weapon, epoch, menh
     state['bow_unloaded'][0] = int(weapon.name == 'bow_unloaded')
 
     menhir_idx = (menhir_location.y - position.y, menhir_location.x - position.x)
-    if abs(menhir_idx[0]) <= 6 and abs(menhir_idx[1]) <= 6:
+    if abs(menhir_idx[0]) <= 4 and abs(menhir_idx[1]) <= 4:
         state['menhir_loc'][menhir_idx] = 1
 
     return state
@@ -145,13 +145,13 @@ def get_map_derivables(position, analytics, move_recommendations, distances):
         'move_to_amulet': np.array([0, 0, 0], dtype=float),  # [HALF-STATIC] One-hot encoding of move type (Left, Right, Forward) - to Amulet
         'move_to_menhir': np.array([0, 0, 0], dtype=float),  # [HALF-STATIC] One-hot encoding of move type (Left, Right, Forward)
         'keypoint_dist': np.array([0, 0, 0, 0, 0], dtype=float),  # [HALF-STATIC] Dists to each weapon type and menhir (0.33 * np.sqrt(x))
-        'walkability': np.zeros([13, 13, 1], dtype=float),  # [STATIC] 1 if yes, 0 otherwise
-        'is_wall': np.zeros([13, 13, 1], dtype=float),  # [STATIC] 1 if yes, 0 otherwise
-        'min_distance': np.zeros([13, 13, 1], dtype=float),  # [HALF-STATIC] 0.33 * np.sqrt(1 + x) of graph distance
-        'attackability_fct': np.zeros([13, 13, 5], dtype=float),  # [STATIC] value
-        'betweenness_centr': np.zeros([13, 13, 1], dtype=float),  # [STATIC] value
-        'non_cluster_coeff': np.zeros([13, 13, 1], dtype=float),  # [STATIC] value
-        'borderedness': np.zeros([13, 13, 1], dtype=float),  # [STATIC] value
+        'walkability': np.zeros([9, 9, 1], dtype=float),  # [STATIC] 1 if yes, 0 otherwise
+        'is_wall': np.zeros([9, 9, 1], dtype=float),  # [STATIC] 1 if yes, 0 otherwise
+        'min_distance': np.zeros([9, 9, 1], dtype=float),  # [HALF-STATIC] 0.33 * np.sqrt(1 + x) of graph distance
+        'attackability_fct': np.zeros([9, 9, 5], dtype=float),  # [STATIC] value
+        'betweenness_centr': np.zeros([9, 9, 1], dtype=float),  # [STATIC] value
+        'non_cluster_coeff': np.zeros([9, 9, 1], dtype=float),  # [STATIC] value
+        'borderedness': np.zeros([9, 9, 1], dtype=float),  # [STATIC] value
     }
 
     map_deriv['move_to_axe'][:3] = move_action_onehot[move_recommendations['A'][0]]

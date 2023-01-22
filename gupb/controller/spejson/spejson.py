@@ -100,7 +100,7 @@ class Spejson(controller.Controller):
             self.target = self.menhir_location
 
         if not self.touched_by_mist:
-            self.touched_by_mist = (np.sum(visibility['mist_effect'][4:9, 4:9]) > 0)
+            self.touched_by_mist = (np.sum(visibility['mist_effect'][2:7, 2:7]) > 0)
 
         someone_in_range = visibility['someone_in_range'][0]
 
@@ -161,7 +161,7 @@ class Spejson(controller.Controller):
 
         bad_neighborhood_factor = 0
         if not self.mist_spotted:
-            bad_neighborhood_factor = int(np.sum(visibility['someone_here'][3:10, 3:10]) - 1)
+            bad_neighborhood_factor = int(np.sum(visibility['someone_here'][1:8, 1:8]) - 1)
 
         if bad_neighborhood_factor > 2 and self.panic_mode < 2:
             self.panic_mode = 6
@@ -258,7 +258,7 @@ class Spejson(controller.Controller):
             if len(feature.shape) > 1:
                 state_tensor += [feature]
             else:
-                state_tensor += [np.tile(feature.reshape(1, 1, -1), [13, 13, 1])]
+                state_tensor += [np.tile(feature.reshape(1, 1, -1), [9, 9, 1])]
 
         state_tensor = tf.constant(np.concatenate(state_tensor, axis=-1).astype(np.float32))
 

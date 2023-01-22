@@ -80,7 +80,7 @@ def get_random_place_on_a_map(traversable: np.array) -> Coords:
             return Coords(x=rx, y=ry)
 
 
-def padded_slice(arr, center, height, width, rad=6, fill=0):
+def padded_slice(arr, center, height, width, rad=4, fill=0):
     """
     Take a zero-padded slice of an array.
     """
